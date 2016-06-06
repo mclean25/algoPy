@@ -16,7 +16,7 @@ class StockIndexer(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super(StockIndexer, self).__init__(*args,**kwargs)
         self.exchange = kwargs.get('exchange')
-        print self.exchange
+        print (self.exchange)
         links = []
         for link in exchange_links[str(self.exchange)]:
             links.append(link)
@@ -29,38 +29,36 @@ class StockIndexer(scrapy.Spider):
             companyList2 = response.xpath('//tr[@class="re"]/td/a/text()').extract()
             companyList = companyList1 + companyList2
             for company in companyList:
+                print("Scraping Company: {0}".format(company))
                 if "TSX" in response.url:
                     go = 'http://finance.yahoo.com/q/hp?s={0}.TO'.format(company)
-                    yield scrapy.Request(go, self.stocks1)
                 elif "LSE" in response.url:
                     go = 'http://finance.yahoo.com/q/hp?s={0}.L'.format(company)
-                    yield scrapy.Request(go, self.stocks1)
                 elif "HKEX" in response.url:
                     go = 'http://finance.yahoo.com/q/hp?s={0}.HK'.format(company)
-                    yield scrapy.Request(go, self.stocks1)
                 elif "AMS" in response.url:
-                    go = 'https://ca.finance.yahoo.com/q/hp?s={0}.AS'.format(company)
-                    yield scrapy.Request(go, self.stocks1)
+                    go = 'http://finance.yahoo.com/q/hp?s={0}.AS'.format(company)
                 else:
-                    go = 'https://ca.finance.yahoo.com/q/hp?s={0}'.format(company)
-                    yield scrapy.Request(go, self.stocks1)
+                    go = 'http://finance.yahoo.com/q/hp?s={0}'.format(company)
+                print("Go: {0}".format(go))
+                yield scrapy.Request(go, self.stocks1)
         elif "http://finance.yahoo.com/q?s=CAT" in response.url:
             go = 'http://finance.yahoo.com/q/hp?s=CAT'
             yield scrapy.Request(go, self.stocks1)
         elif 'http://finance.yahoo.com/q/hp?s=CAT' in response.url:
             go = 'http://finance.yahoo.com/q/hp?s=CAT'
             yield scrapy.Request(go, self.stocks1)
-        else: 
+        else:
             rows = response.xpath('//table[@class="yfnc_tableout1"]//table/tr')[1:]
             for row in rows:
                 company = row.xpath('.//td[1]/b/a/text()').extract()
                 go = 'http://finance.yahoo.com/q/hp?s={0}'.format(company)
                 yield scrapy.Request(go, self.stocks1)
-     
+
     def stocks1(self, response):
 
         date_format = '%Y-%m-%d'
-
+        print ("in stocks1")
         if 'item' in response.meta:
             # If the response contains a 'item' from a previous page unwrap it
             item = response.meta['item']
@@ -79,6 +77,8 @@ class StockIndexer(scrapy.Spider):
         # This grabs the stock data from the page
         returns_page = []
         rows = response.xpath('//table[@class="yfnc_datamodoutline1"]//table/tr')[1:]
+        if rows:
+            print("there is rows")
         for row in rows:
             cells = row.xpath('.//td/text()').extract()
             try:
@@ -111,7 +111,7 @@ class StockIndexer(scrapy.Spider):
                         item['adjcloses'].append(vals['adjclose'])
                         item['dates'].append(vals['date'])
             except ValueError:
-                continue  
+                continue
             except IndexError:
                 # print "index Error with cells: {0}".format(cells)
                 continue
@@ -129,21 +129,24 @@ class StockIndexer(scrapy.Spider):
             yield request
         else:
             # items = []
-            if item['adjcloses'] != []:
-                item['url'] = response.url
+            if item['adjcloses']:
+                print("adjusted close")
                 item['name'] = response.xpath('//div[@class="title"]/h2/text()').extract()
-                item['symbol'] = stock_symbol(item['name'])
-                item['dates'] = json.dumps(item['dates'])
-                item['opens'] = json.dumps(item['opens'])
-                item['highs'] = json.dumps(item['highs'])
-                item['lows'] = json.dumps(item['lows'])
-                item['closes'] = json.dumps(item['closes'])
-                item['volumes'] = json.dumps(item['volumes'])
-                item['adjcloses'] = json.dumps(item['adjcloses'])
-                item['exchange'] = convert_exchange_names(response.xpath('//span[@class="rtq_exch"]/text()').extract(),"")
-                # item['ind_sharpe'] = ((numpy.average(rates) - risk_free_rate) / numpy.std(rates))
-                # item['dates'] = dates
-                # items.append(item)
-                yield item
-
-
+                if item['name']:
+                    item['url'] = response.url
+                    print("ITEM: {0}".format(item))
+                    item['symbol'] = stock_symbol(item['name'])
+                    item['dates'] = json.dumps(item['dates'])
+                    item['opens'] = json.dumps(item['opens'])
+                    item['highs'] = json.dumps(item['highs'])
+                    item['lows'] = json.dumps(item['lows'])
+                    item['closes'] = json.dumps(item['closes'])
+                    item['volumes'] = json.dumps(item['volumes'])
+                    item['adjcloses'] = json.dumps(item['adjcloses'])
+                    item['exchange'] = convert_exchange_names(response.xpath('//span[@class="rtq_exch"]/text()').extract(),"")
+                    # item['ind_sharpe'] = ((numpy.average(rates) - risk_free_rate) / numpy.std(rates))
+                    # item['dates'] = dates
+                    # items.append(item)
+                    yield item
+                else:
+                    print("Couldn't extract data at URL: {0}".format(response.url))

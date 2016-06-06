@@ -2,6 +2,7 @@ import re
 
 def stock_symbol(stock):
     if type(stock) == list:
+        print("STOCK: {0}".format(stock))
         stock = str(stock[0])
     try:
         a = re.search(r'\((.*)\)', stock).group()
@@ -10,9 +11,9 @@ def stock_symbol(stock):
         else:
             return re.search(r'\((.*)\)', stock).group(1)
     except TypeError:
-        print "TYpeError with stock: {0} that has type: {1}".format(stock,type(stock))
+        print ("TYpeError with stock: {0} that has type: {1}").format(stock,type(stock))
     except AttributeError:
-        print "AttributeError with stock: {0} that has type: {1}".format(stock,type(stock))
+        print ("AttributeError with stock: {0} that has type: {1}").format(stock,type(stock))
 
 def convert_exchange_names(exchange_name, current_exchange):
     if exchange_name == '' or exchange_name == 'exchange':

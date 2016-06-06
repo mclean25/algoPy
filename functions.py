@@ -11,7 +11,7 @@ def check_file(n):
             for x in range(len(c[:-1])):
                 b = b + "_" + c[x]
         else:
-            b = c[0] 
+            b = c[0]
         n = b + "_" + i
     return n
 
@@ -28,15 +28,15 @@ def stock_symbol(stock):
         else:
             return re.search(r'\((.*)\)', stock).group(1)
     except TypeError:
-        print "TYpeError with stock: {0} that has type: {1}".format(stock,type(stock))
+        print ("TYpeError with stock: {0} that has type: {1}").format(stock,type(stock))
     except AttributeError:
-        print "AttributeError with stock: {0} that has type: {1}".format(stock,type(stock))
+        print ("AttributeError with stock: {0} that has type: {1}").format(stock,type(stock))
 
 
 def get_change_in(y, ln=False, percentage=True, ascending=True):
     """
     returns change in 1-d numpy array
-    if percentage == True, returns percentage change, else actual dollar or amount difference 
+    if percentage == True, returns percentage change, else actual dollar or amount difference
     ascending means [older - > newer], else [newer - > older]
     """
     if ascending == True:
